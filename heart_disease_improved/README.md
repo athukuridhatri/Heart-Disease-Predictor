@@ -223,4 +223,4 @@ This application is developed for **educational purposes only** and should not b
 
 ## 📬 Contact
 
-**Dhatri** | dhatri@email.com | [LinkedIn](#) | [GitHub](#)
+**Dhatri** | athukuridhatri@email.com | [LinkedIn](#) | [GitHub](#)
