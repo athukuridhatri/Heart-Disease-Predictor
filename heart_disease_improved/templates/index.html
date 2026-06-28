@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Heart Disease Risk Predictor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+  :root {
+    --red: #e63946;
+    --red-light: #ff6b6b;
+    --red-dim: rgba(230,57,70,0.12);
+    --green: #2a9d8f;
+    --green-dim: rgba(42,157,143,0.12);
+    --bg: #0d0f14;
+    --card: #161a23;
+    --card2: #1e2330;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8eaf0;
+    --muted: #7a8099;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo {
+    width: 42px; height: 42px;
+    background: var(--red-dim);
+    border: 1.5px solid var(--red);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  header p { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+  .acc-badge {
+    margin-left: auto;
+    background: rgba(42,157,143,0.15);
+    color: #4ecdc4;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(42,157,143,0.3);
+  }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 32px 24px 60px; }
+
+  .intro {
+    background: linear-gradient(135deg, rgba(230,57,70,0.08), rgba(230,57,70,0.02));
+    border: 1px solid rgba(230,57,70,0.2);
+    border-radius: 14px;
+    padding: 20px 26px;
+    margin-bottom: 30px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .intro-icon { font-size: 2rem; flex-shrink: 0; }
+  .intro h2 { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600; margin-bottom: 5px; }
+  .intro p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+  /* Metrics strip */
+  .metrics-strip {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px;
+  }
+  .metric-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    flex: 1; min-width: 100px; text-align: center;
+  }
+  .metric-pill .m-val {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.1rem; font-weight: 700; color: #4ecdc4;
+  }
+  .metric-pill .m-label { font-size: 0.68rem; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }
+
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    margin-bottom: 26px;
+  }
+
+  .field {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    transition: border-color 0.2s;
+  }
+  .field:hover { border-color: rgba(230,57,70,0.3); }
+
+  .field-name { font-size: 0.86rem; font-weight: 500; color: var(--text); }
+  .field-hint { font-size: 0.72rem; color: var(--muted); margin: 3px 0 10px; line-height: 1.4; }
+
+  .field select, .field input[type=number] {
+    width: 100%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.88rem;
+    font-family: 'Inter', sans-serif;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field select:focus, .field input:focus { border-color: var(--red); }
+  .field select option { background: #1e2330; }
+
+  .slider-wrap { display:flex; align-items:center; gap:10px; }
+  .slider-wrap input[type=range] {
+    flex:1; -webkit-appearance:none;
+    height:4px; background:var(--card2);
+    border-radius:4px; border:none; padding:0; cursor:pointer;
+  }
+  .slider-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:16px; height:16px;
+    border-radius:50%; background:var(--red);
+    cursor:pointer; border:2px solid var(--bg);
+  }
+  .slider-val { min-width:38px; text-align:right; font-size:0.88rem; font-weight:600; }
+
+  .predict-btn {
+    width: 100%; padding: 16px;
+    background: var(--red); color: white; border: none;
+    border-radius: 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    margin-bottom: 28px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .predict-btn:hover { background: #c1121f; transform: translateY(-1px); }
+  .predict-btn:disabled { background: #444; cursor: not-allowed; transform: none; }
+
+  #result { display: none; }
+
+  .result-card {
+    border-radius: 16px; padding: 26px;
+    margin-bottom: 16px; border: 1.5px solid;
+    animation: fadeUp 0.4s ease;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+  .result-card.danger { background:rgba(230,57,70,0.07); border-color:rgba(230,57,70,0.4); }
+  .result-card.safe   { background:rgba(42,157,143,0.07); border-color:rgba(42,157,143,0.4); }
+
+  .result-header { display:flex; align-items:center; gap:16px; margin-bottom:22px; }
+  .result-icon {
+    width:56px; height:56px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center; font-size:1.8rem; flex-shrink:0;
+  }
+  .danger .result-icon { background:var(--red-dim); }
+  .safe   .result-icon { background:var(--green-dim); }
+
+  .result-title { font-family:'Space Grotesk',sans-serif; font-size:1.25rem; font-weight:700; margin-bottom:4px; }
+  .danger .result-title { color:var(--red-light); }
+  .safe   .result-title { color:#4ecdc4; }
+  .result-sub { font-size:0.82rem; color:var(--muted); line-height:1.5; }
+
+  /* Prediction meta row (probability + confidence) */
+  .pred-meta {
+    display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .pred-meta-item {
+    background: var(--card2); border-radius: 10px;
+    padding: 12px 18px; flex: 1; min-width: 120px;
+  }
+  .pred-meta-item .pm-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .pred-meta-item .pm-val   { font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
+
+  .prob-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .prob-label { font-size:0.78rem; color:var(--muted); min-width:100px; }
+  .prob-bar-bg { flex:1; height:10px; background:var(--card2); border-radius:10px; overflow:hidden; }
+  .prob-bar-fill { height:100%; border-radius:10px; transition:width 1s cubic-bezier(0.4,0,0.2,1); width:0%; }
+  .danger .prob-bar-fill.main { background:linear-gradient(90deg,var(--red),var(--red-light)); }
+  .safe   .prob-bar-fill.main { background:linear-gradient(90deg,var(--green),#4ecdc4); }
+  .prob-bar-fill.secondary { background:#333; }
+  .prob-pct { font-weight:700; font-size:0.88rem; min-width:40px; text-align:right; }
+
+  /* Medical recommendation box */
+  .rec-box {
+    border-radius: 10px; padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 0.82rem; line-height: 1.7; color: var(--text);
+  }
+  .danger .rec-box { background: rgba(230,57,70,0.08); border: 1px solid rgba(230,57,70,0.2); }
+  .safe   .rec-box { background: rgba(42,157,143,0.08); border: 1px solid rgba(42,157,143,0.2); }
+  .rec-box strong { display: block; margin-bottom: 4px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; }
+  .danger .rec-box strong { color: var(--red-light); }
+  .safe   .rec-box strong { color: #4ecdc4; }
+
+  .factors { background:var(--card2); border-radius:10px; padding:16px; margin-top:16px; }
+  .factors-title { font-size:0.72rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+  .factor-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:0.8rem; }
+  .factor-name { min-width:175px; color:var(--text); }
+  .factor-mini { flex:1; height:6px; background:var(--card); border-radius:6px; overflow:hidden; }
+  .factor-fill { height:100%; border-radius:6px; }
+  .factor-val { min-width:40px; text-align:right; font-size:0.75rem; color:var(--muted); }
+
+  /* Medical Disclaimer (page footer) */
+  .page-disclaimer {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 22px;
+    margin-top: 32px;
+    font-size: 0.77rem;
+    color: var(--muted);
+    line-height: 1.7;
+    text-align: center;
+  }
+  .page-disclaimer strong { color: var(--text); }
+
+  .tip-box {
+    background:linear-gradient(135deg, rgba(255,200,0,0.06), rgba(255,200,0,0.02));
+    border:1px solid rgba(255,200,0,0.2);
+    border-radius:12px; padding:18px 22px; margin-top:28px;
+  }
+  .tip-box h3 { font-size:0.8rem; font-weight:700; color:#ffd166; margin-bottom:10px; letter-spacing:0.5px; }
+  .tip-box ul { list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .tip-box li { font-size:0.79rem; color:var(--muted); padding-left:16px; position:relative; line-height:1.5; }
+  .tip-box li::before { content:'→'; position:absolute; left:0; color:#ffd166; }
+
+  .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* Error message */
+  .error-msg {
+    background: rgba(230,57,70,0.1);
+    border: 1px solid rgba(230,57,70,0.4);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 0.84rem;
+    color: var(--red-light);
+    margin-bottom: 16px;
+  }
+
+  @media(max-width:600px) {
+    header { padding:18px 16px; }
+    .container { padding:20px 14px 50px; }
+    .grid { grid-template-columns:1fr; }
+    .intro { flex-direction:column; gap:10px; }
+    .acc-badge { display:none; }
+    .metrics-strip { gap: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🫀</div>
+  <div>
+    <h1>Heart Disease Risk Predictor</h1>
+    <p>Logistic Regression · UCI Cleveland Dataset · Flask + scikit-learn</p>
+  </div>
+  <span class="acc-badge">Accuracy: {{ accuracy }}%</span>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <div class="intro-icon">🎓</div>
+    <div>
+      <h2>B.Tech Data Science Final Project — Dhatri</h2>
+      <p>Predicts heart disease risk using 13 clinical features from the UCI Cleveland Heart Disease Dataset. Built with Python (Flask, scikit-learn, pandas, numpy). Enter patient data below and click Predict.</p>
+    </div>
+  </div>
+
+  <!-- Model Evaluation Metrics Strip -->
+  <div class="metrics-strip">
+    <div class="metric-pill"><div class="m-val">{{ accuracy }}%</div><div class="m-label">Accuracy</div></div>
+    <div class="metric-pill"><div class="m-val">{{ precision }}%</div><div class="m-label">Precision</div></div>
+    <div class="metric-pill"><div class="m-val">{{ recall }}%</div><div class="m-label">Recall</div></div>
+    <div class="metric-pill"><div class="m-val">{{ f1 }}%</div><div class="m-label">F1 Score</div></div>
+    <div class="metric-pill"><div class="m-val">{{ roc_auc }}%</div><div class="m-label">ROC-AUC</div></div>
+  </div>
+
+  <!-- Patient Info -->
+  <div class="section-label">Patient Information</div>
+  <div class="grid">
+    <div class="field">
+      <div class="field-name">Age</div>
+      <div class="field-hint">Patient's age in years (20–80)</div>
+      <div class="slider-wrap">
+        <input type="range" id="age" name="age" min="20" max="80" value="52"
+               oninput="document.getElementById('age_val').textContent=this.value"/>
+        <span class="slider-val" id="age_val">52</span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-name">Sex</div>
+      <div class="field-hint">Biological sex</div>
+      <select id="sex" name="sex">
+        <option value="1">Male</option>
+        <option value="0">Female</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="field-name">Chest Pain Type (cp)</div>
+      <div class="field-hint">Type of chest pain experienced</div>
+      <select id="cp" name="cp">
+        <option value="3">Typical Angina</option>
+        <option value="2">Atypical Angina</option>
+        <option value="1">Non-Anginal Pain</option>
+        <option value="0">Asymptomatic</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="field-name">Resting Blood Pressure</div>
+      <div class="field-hint">mm Hg on admission (80–220)</div>
+      <div class="slider-wrap">
+        <input type="range" id="trestbps" min="80" max="220" value="130"
+               oninput="document.getElementById('trestbps_val').textContent=this.value"/>
+        <span class="slider-val" id="trestbps_val">130</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clinical Markers -->
+  <div class="section-label">Clinical Markers</div>
+  <div class="grid">
+    <div class="field">
+      <div class="field-name">Serum Cholesterol (mg/dl)</div>
+      <div class="field-hint">Normal: below 200 mg/dl (100–700)</div>
+      <div class="slider-wrap">
+        <input type="range" id="chol" min="100" max="700" value="250"
+               oninput="document.getElementById('chol_val').textContent=this.value"/>
+        <span class="slider-val" id="chol_val">250</span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-name">Fasting Blood Sugar</div>
+      <div class="field-hint">Is fasting BS > 120 mg/dl?</div>
+      <select id="fbs">
+        <option value="0">No (≤ 120 mg/dl)</option>
+        <option value="1">Yes (> 120 mg/dl)</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="field-name">Resting ECG Result</div>
+      <div class="field-hint">Electrocardiographic result</div>
+      <select id="restecg">
+        <option value="0">Normal</option>
+        <option value="1">ST-T Wave Abnormality</option>
+        <option value="2">Left Ventricular Hypertrophy</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="field-name">Max Heart Rate Achieved</div>
+      <div class="field-hint">During stress test in bpm (60–220)</div>
+      <div class="slider-wrap">
+        <input type="range" id="thalach" min="60" max="220" value="150"
+               oninput="document.getElementById('thalach_val').textContent=this.value"/>
+        <span class="slider-val" id="thalach_val">150</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stress Test -->
+  <div class="section-label">Stress Test &amp; Additional Findings</div>
+  <div class="grid">
+    <div class="field">
+      <div class="field-name">Exercise Induced Angina</div>
+      <div class="field-hint">Chest pain during exercise?</div>
+      <select id="exang">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="field-name">ST Depression (oldpeak)</div>
+      <div class="field-hint">Induced by exercise relative to rest (0–7)</div>
+      <div class="slider-wrap">
+        <input type="range" id="oldpeak" min="0" max="70" value="10"
+               oninput="document.getElementById('oldpeak_val').textContent=(this.value/10).toFixed(1)"/>
+        <span class="slider-val" id="oldpeak_val">1.0</span>
+      </div>
+    </div>
+    <div class="field">
+      <div class="field-name">Slope of ST Segment</div>
+      <div class="field-hint">Peak exercise ST slope</div>
+      <select id="slope">
+        <option value="2">Upsloping</option>
+        <option value="1">Flat</option>
+        <option value="0">Downsloping</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="field-name">Major Vessels (ca)</div>
+      <div class="field-hint">Coloured by fluoroscopy (0–3)</div>
+      <select id="ca">
+        <option value="0">0 vessels</option>
+        <option value="1">1 vessel</option>
+        <option value="2">2 vessels</option>
+        <option value="3">3 vessels</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="field-name">Thalassemia (thal)</div>
+      <div class="field-hint">Blood disorder type</div>
+      <select id="thal">
+        <option value="2">Normal</option>
+        <option value="1">Fixed Defect</option>
+        <option value="3">Reversible Defect</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="predict-btn" id="predictBtn" onclick="predict()">
+    🫀 Predict Heart Disease Risk
+  </button>
+
+  <div id="result"></div>
+
+  <div class="tip-box">
+    <h3>💡 INTERVIEW TALKING POINTS</h3>
+    <ul>
+      <li><strong>Dataset:</strong> UCI Cleveland Heart Disease — 278 clean samples, 13 clinical features, binary target (disease / no disease)</li>
+      <li><strong>Algorithm:</strong> Logistic Regression — outputs probability via sigmoid; coefficients directly show feature impact direction</li>
+      <li><strong>Preprocessing:</strong> StandardScaler normalises all features to mean=0, std=1 — critical to prevent large-value bias in LR</li>
+      <li><strong>Split:</strong> Stratified 80/20 split — preserves class ratio in both train and test sets</li>
+      <li><strong>Metrics:</strong> Accuracy, Precision, Recall, F1, ROC-AUC — Recall especially important (minimising false negatives)</li>
+      <li><strong>Why LR?</strong> Simple, interpretable, fast to train; each coefficient shows which features push risk up or down</li>
+      <li><strong>Stack:</strong> Python · Flask · scikit-learn · pandas · numpy · matplotlib · HTML/CSS/JS</li>
+    </ul>
+  </div>
+
+  <!-- Medical Disclaimer (page footer) -->
+  <div class="page-disclaimer">
+    <strong>⚕️ Medical Disclaimer</strong><br>
+    This application is developed for <strong>educational purposes only</strong> and should not be used as a substitute for professional medical diagnosis.
+    The predictions generated by this tool are based on a machine learning model trained on a limited dataset and may not reflect individual medical conditions accurately.
+    Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment.
+  </div>
+
+</div>
+
+<script>
+async function predict() {
+  const btn = document.getElementById('predictBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Predicting...';
+
+  // Clear previous result
+  const resultDiv = document.getElementById('result');
+  resultDiv.style.display = 'none';
+  resultDiv.innerHTML = '';
+
+  const payload = {
+    age:      parseFloat(document.getElementById('age').value),
+    sex:      parseFloat(document.getElementById('sex').value),
+    cp:       parseFloat(document.getElementById('cp').value),
+    trestbps: parseFloat(document.getElementById('trestbps').value),
+    chol:     parseFloat(document.getElementById('chol').value),
+    fbs:      parseFloat(document.getElementById('fbs').value),
+    restecg:  parseFloat(document.getElementById('restecg').value),
+    thalach:  parseFloat(document.getElementById('thalach').value),
+    exang:    parseFloat(document.getElementById('exang').value),
+    oldpeak:  parseFloat(document.getElementById('oldpeak').value) / 10,
+    slope:    parseFloat(document.getElementById('slope').value),
+    ca:       parseFloat(document.getElementById('ca').value),
+    thal:     parseFloat(document.getElementById('thal').value),
+  };
+
+  // Client-side guard: check for NaN values
+  const invalid = Object.entries(payload).filter(([, v]) => isNaN(v));
+  if (invalid.length > 0) {
+    showError('Please fill in all fields before predicting.');
+    resetBtn();
+    return;
+  }
+
+  try {
+    const res  = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showError('Prediction error: ' + (data.error || 'Unknown server error.'));
+      return;
+    }
+
+    renderResult(data);
+
+  } catch (err) {
+    showError('Network error. Please make sure Flask is running and try again.');
+  } finally {
+    resetBtn();
+  }
+}
+
+function showError(msg) {
+  const resultDiv = document.getElementById('result');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = `<div class="error-msg">⚠️ ${msg}</div>`;
+  resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetBtn() {
+  const btn = document.getElementById('predictBtn');
+  btn.disabled = false;
+  btn.innerHTML = '🫀 Predict Heart Disease Risk';
+}
+
+function renderResult(data) {
+  const hasDis  = data.prediction === 1;
+  const cls     = hasDis ? 'danger' : 'safe';
+  const riskPct = data.probability_disease;
+  const safePct = data.probability_no_disease;
+  const maxC    = Math.max(...data.top_features.map(f => f.abs_contrib));
+
+  const resultDiv = document.getElementById('result');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = `
+    <div class="result-card ${cls}">
+      <div class="result-header">
+        <div class="result-icon">${hasDis ? '⚠️' : '✅'}</div>
+        <div>
+          <div class="result-title">${data.risk_label}</div>
+          <div class="result-sub">${hasDis
+            ? 'Model predicts <strong>presence</strong> of heart disease. Clinical evaluation is recommended.'
+            : 'Model predicts <strong>absence</strong> of heart disease. Continue healthy lifestyle habits.'}</div>
+        </div>
+      </div>
+
+      <!-- Prediction summary: probability + confidence -->
+      <div class="pred-meta">
+        <div class="pred-meta-item">
+          <div class="pm-label">Risk Probability</div>
+          <div class="pm-val" style="color:${hasDis ? '#ff6b6b' : '#4ecdc4'}">${riskPct}%</div>
+        </div>
+        <div class="pred-meta-item">
+          <div class="pm-label">Confidence Level</div>
+          <div class="pm-val" style="color:${hasDis ? '#ff6b6b' : '#4ecdc4'}">${data.confidence}</div>
+        </div>
+      </div>
+
+      <!-- Probability bars -->
+      <div class="prob-row">
+        <span class="prob-label">Heart Disease</span>
+        <div class="prob-bar-bg"><div class="prob-bar-fill main" id="bar1"></div></div>
+        <span class="prob-pct" style="color:${hasDis ? '#ff6b6b' : '#4ecdc4'}">${riskPct}%</span>
+      </div>
+      <div class="prob-row">
+        <span class="prob-label">No Disease</span>
+        <div class="prob-bar-bg"><div class="prob-bar-fill secondary" id="bar2"></div></div>
+        <span class="prob-pct" style="color:var(--muted)">${safePct}%</span>
+      </div>
+
+      <!-- Medical Recommendation -->
+      <div class="rec-box">
+        <strong>${hasDis ? '🩺 Clinical Recommendation' : '💚 Health Advice'}</strong>
+        ${data.recommendation}
+      </div>
+
+      <!-- Top Contributing Features -->
+      <div class="factors">
+        <div class="factors-title">Top Contributing Features</div>
+        ${data.top_features.map(f => `
+          <div class="factor-row">
+            <span class="factor-name">${f.name}</span>
+            <div class="factor-mini">
+              <div class="factor-fill" style="width:${Math.round(f.abs_contrib / maxC * 100)}%;
+                background:${f.contribution > 0
+                  ? (hasDis ? '#e63946' : '#555')
+                  : '#2a9d8f'}"></div>
+            </div>
+            <span class="factor-val">${f.value}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+
+  // Animate probability bars after DOM insertion
+  setTimeout(() => {
+    document.getElementById('bar1').style.width = riskPct + '%';
+    document.getElementById('bar2').style.width = safePct + '%';
+  }, 60);
+
+  resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+</body>
+</html>
